@@ -22,6 +22,7 @@ class Date:
                 writer.writerow(transaction)
 
 
+
 class Account:
     def __init__(self, account_number, initial_balance=0, account_type='Checking'):
         self.account_number = account_number
@@ -156,13 +157,13 @@ class Login:
         try:
             with open('bank.csv', mode='r') as file:
                 reader = csv.reader(file, delimiter=';')
-                next(reader)  # Skip header row
+
                 for row in reader:
                     account_id = row[0]
                     first_name = row[1]
                     last_name = row[2]
                     password = row[3]
-                    balance_checking, balance_savings = map(float, row[4].split(','))
+                    balance_checking, balance_savings = map(int, row[4].split(','))
                     accounts = []
                     if balance_checking > 0:
                         accounts.append('Checking')
@@ -196,10 +197,14 @@ def add_new_customer(login_system, filename='bank.csv'):
     last_name = input("Enter Last Name: ")
     password = input("Set a Password: ")
 
-    balance_checking = float(input("Initial Deposit for Checking: "))
-    balance_savings = float(input("Initial Deposit for Savings: "))
+    balance_checking = int(input("Initial Deposit for Checking: "))
+    balance_savings = int(input("Initial Deposit for Savings: "))
     
-    account_type = input("Choose Account Type (Checking, Savings, or Both): ").strip().lower()
+    while True:
+        account_type = input("Choose Account Type (Checking, Savings, or Both): ").strip().lower()
+        if account_type in ['checking', 'savings', 'both']:
+            break
+        print("Invalid choice. Please enter 'Checking', 'Savings', or 'Both'.")
 
     accounts = []
     if account_type in ['checking', 'both']:
@@ -248,16 +253,17 @@ def user_interaction():
                     sub_choice = input("Enter choice: ")
 
                     if sub_choice == '1':
-                        amount = float(input("Enter deposit amount: "))
+                        amount = int(input("Enter deposit amount: "))
                         logged_in_customer.deposit_to_checking(amount)
                     elif sub_choice == '2':
-                        amount = float(input("Enter withdrawal amount: "))
+                        amount = int(input("Enter withdrawal amount: "))
                         logged_in_customer.withdraw_from_checking(amount)
                     elif sub_choice == '3':
-                        amount = float(input("Enter transfer amount: "))
+                        amount = int(input("Enter transfer amount: "))
                         logged_in_customer.transfer_between_accounts(amount)
+                        logged_in_customer.checking_account.save_transaction('Transfer to Savings', amount)
                     elif sub_choice == '4':
-                        amount = float(input("Enter withdrawal amount: "))
+                        amount = int(input("Enter withdrawal amount: "))
                         logged_in_customer.withdraw_from_savings(amount)
                     elif sub_choice == '5':
                         logged_in_customer.get_account_info()
@@ -274,3 +280,7 @@ def user_interaction():
 
 if __name__ == "__main__":
     user_interaction()
+
+
+
+
