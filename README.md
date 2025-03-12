@@ -18,8 +18,16 @@ This is a simple banking system where users can create accounts, deposit money, 
 - CSV file handling
 
 ## Challenges:
-- Implementing overdraft protection
-- Handling multiple accounts and transactions efficiently 
+- Implementing overdraft protection:
+  - This involved ensuring that the account cannot go below -$100 and applying an overdraft fee.
+- Handling multiple accounts and transactions efficiently:
+  - I had to ensure that both checking and savings accounts are handled correctly in terms of deposits, withdrawals, and transfers.
+## Contributing:
+1. Fork the repository.
+2. Create a new branch (`git checkout -b feature-name`).
+3. Make your changes and commit them (`git commit -am 'Add new feature'`).
+4. Push to the branch (`git push origin feature-name`).
+5. Create a new Pull Request.
 
 ## How to Run the Application:
 1. Clone the repository to your local machine.

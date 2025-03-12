@@ -1,5 +1,4 @@
 import csv
-from datetime import datetime
 
 class Date:
     def __init__(self, bank_csv):
@@ -22,7 +21,6 @@ class Date:
                 writer.writerow(transaction)
 
 
-
 class Account:
     def __init__(self, account_number, initial_balance=0, account_type='Checking'):
         self.account_number = account_number
@@ -34,7 +32,6 @@ class Account:
     def deposit(self, amount):
         if amount > 0:
             self.balance += amount
-            self.save_transaction('Deposit', amount)
             print(f"Deposited ${amount} into account {self.account_number}")
         else:
             print("Deposit amount must be positive.")
@@ -53,7 +50,6 @@ class Account:
                 print("Withdrawal denied! Account cannot go below -$100.")
             else:
                 self.balance -= amount
-                self.save_transaction('Withdrawal', amount)
                 print(f"Withdrew ${amount} from account {self.account_number}")
                 if self.balance < 0:
                     self.balance -= 35 
@@ -69,30 +65,20 @@ class Account:
         if self.balance >= amount:
             self.balance -= amount
             target_account.balance += amount
-            self.save_transaction('Transfer', amount)
             print(f"Transferred ${amount} from account {self.account_number} to account {target_account.account_number}")
         else:
             print("Insufficient funds for transfer.")
 
     def get_balance(self):
         print(f"Account Number: {self.account_number}, Balance: ${self.balance}, Account Type: {self.account_type}")
-
-    def save_transaction(self, transaction_type, amount):
-        transaction = {
-            'account_number': self.account_number,
-            'transaction_type': transaction_type,
-            'amount': amount,
-            'balance': self.balance,
-            'date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        }
-
-        with open('bank.csv', mode='a', newline='') as file:
-            fieldnames = ['account_number', 'transaction_type', 'amount', 'balance', 'date']
-            writer = csv.DictWriter(file, fieldnames=fieldnames)
-            if file.tell() == 0:
-                writer.writeheader()
-            writer.writerow(transaction)
-
+        
+    def reactivate_account(self):
+        if self.balance >= 0 and self.overdrafts <= 2:
+            self.deactivated = False
+            self.overdrafts = 0
+            print(f"The action has been reactivated for account {self.account_number}.")
+        else:
+            print(f"Account {self.account_number} cannot be reactivated due to negative balance or excessive overdrafts.")
 
 class Customer:
     def __init__(self, account_id, first_name, last_name, password, balance_checking=0, balance_savings=0, accounts=None):
@@ -105,44 +91,62 @@ class Customer:
             self.checking_account = Account(account_id + "_checking", balance_checking, 'Checking')
         if 'Savings' in self.accounts:
             self.savings_account = Account(account_id + "_savings", balance_savings, 'Savings')
-
     def get_account_info(self):
+        
+        print(f"Account ID: {self.account_id}")
+        print(f"Name: {self.first_name} {self.last_name}")
         if hasattr(self, 'checking_account'):
-            self.checking_account.get_balance()
+            print(f"Checking Account Balance: ${self.checking_account.balance}")
         if hasattr(self, 'savings_account'):
-            self.savings_account.get_balance()
+            print(f"Savings Account Balance: ${self.savings_account.balance}")
+
+    def update_csv(self, filename='bank.csv'):
+        rows = []
+        with open(filename, mode='r') as file:
+            reader = csv.reader(file, delimiter=';')
+            for row in reader:
+                if row[0] == self.account_id:
+                    balance_checking = self.checking_account.balance if hasattr(self, 'checking_account') else 0
+                    balance_savings = self.savings_account.balance if hasattr(self, 'savings_account') else 0
+                    row[4] = f"{balance_checking},{balance_savings}"
+                rows.append(row)
+
+        with open(filename, mode='w', newline='') as file:
+            writer = csv.writer(file, delimiter=';')
+            writer.writerows(rows)
 
     def deposit_to_checking(self, amount):
         if hasattr(self, 'checking_account'):
             self.checking_account.deposit(amount)
+            self.update_csv() 
 
     def deposit_to_savings(self, amount):
         if hasattr(self, 'savings_account'):
             self.savings_account.deposit(amount)
+            self.update_csv()  
 
     def withdraw_from_checking(self, amount):
         if hasattr(self, 'checking_account'):
             self.checking_account.withdraw(amount)
+            self.update_csv() 
 
     def withdraw_from_savings(self, amount):
         if hasattr(self, 'savings_account'):
             self.savings_account.withdraw(amount)
+            self.update_csv()  
 
     def transfer_between_accounts(self, amount):
         if hasattr(self, 'checking_account') and hasattr(self, 'savings_account'):
-            if self.checking_account.balance >= amount:
-                self.checking_account.balance -= amount
-                self.savings_account.balance += amount
-                print(f"Transferred ${amount} from Checking to Savings.")
-            else:
-                print("Insufficient funds in Checking.")
-        else:
-            print("One or both accounts do not exist.")
+            self.checking_account.balance -= amount
+            self.savings_account.balance += amount
+            self.update_csv() 
+            print(f"Transferred ${amount} from Checking to Savings.")
 
     def transfer_to_other_customer(self, other_customer, amount):
         if hasattr(self, 'checking_account') and self.checking_account.balance >= amount:
             self.checking_account.balance -= amount
             other_customer.checking_account.balance += amount
+            self.update_csv() 
             print(f"Transferred ${amount} from your account to {other_customer.first_name} {other_customer.last_name}.")
         else:
             print("Insufficient funds.")
@@ -261,7 +265,6 @@ def user_interaction():
                     elif sub_choice == '3':
                         amount = int(input("Enter transfer amount: "))
                         logged_in_customer.transfer_between_accounts(amount)
-                        logged_in_customer.checking_account.save_transaction('Transfer to Savings', amount)
                     elif sub_choice == '4':
                         amount = int(input("Enter withdrawal amount: "))
                         logged_in_customer.withdraw_from_savings(amount)
@@ -280,6 +283,7 @@ def user_interaction():
 
 if __name__ == "__main__":
     user_interaction()
+
 
 
 
