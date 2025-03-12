@@ -1,5 +1,4 @@
 import csv
-
 class Date:
     def __init__(self, bank_csv):
         self.bank_csv = bank_csv
@@ -37,28 +36,56 @@ class Account:
             print("Deposit amount must be positive.")
 
     def withdraw(self, amount):
-        if self.deactivated:
-            print("Account is deactivated due to multiple overdrafts.")
-            return
-        
         if amount > 100:
             print("You cannot withdraw more than $100 per transaction.")
             return
-        
-        if amount > 0:
-            if self.balance - amount < -100:
-                print("Withdrawal denied! Account cannot go below -$100.")
-            else:
-                self.balance -= amount
-                print(f"Withdrew ${amount} from account {self.account_number}")
-                if self.balance < 0:
-                    self.balance -= 35 
-                    self.overdrafts += 1
-                    print("⚠️ Overdraft fee of $35 applied.")
-                    if self.overdrafts > 2:
-                        self.deactivated = True
-                        print(f"Account {self.account_number} has been deactivated due to multiple overdrafts.")
+
+        if amount <= 0:
+            print("Withdrawal amount must be positive.")
+            return
+
+        if self.deactivated:
+            print("Account is deactivated. Please reactivate the account before withdrawing.")
+            return
+
+        potential_balance = self.balance - amount
+        if potential_balance < -100:
+            print("Withdrawal denied! Account cannot go below -$100.")
+            print(self.balance)
+            return
+
+        self.balance -= amount
+        print(f"Withdrew ${amount} from account {self.account_number}")
+
+        if self.balance < 0:
+         if self.balance - 35 < -100:
+            self.deactivated = True
+            print(f"Account {self.account_number} has been deactivated due to excessive overdrafts.")
+            return
+            self.balance -= 35
+            print("Overdraft fee of $35 applied.")
+
+        if self.balance < -100:
+            self.deactivated = True
+            print(f"Account {self.account_number} has been deactivated due to excessive overdrafts.")
+            print(self.balance)
+
+    def transfer(self, target_account, amount):
+        if self.balance >= amount:
+            self.balance -= amount
+            target_account.balance += amount
+            print(f"Transferred ${amount} from account {self.account_number} to account {target_account.account_number}")
         else:
+            print("Insufficient funds for transfer.")
+
+    def reactivate_account(self):
+        if self.balance >= 0 and self.overdrafts <= 2:
+            self.deactivated = False
+            self.overdrafts = 0
+            print(f"The account has been reactivated for account {self.account_number}.")
+        else:
+            print(f"Account {self.account_number} cannot be reactivated due to negative balance or excessive overdrafts.")
+       
             print("Withdrawal amount must be positive.")
 
     def transfer(self, target_account, amount):
@@ -72,14 +99,6 @@ class Account:
     def get_balance(self):
         print(f"Account Number: {self.account_number}, Balance: ${self.balance}, Account Type: {self.account_type}")
         
-    def reactivate_account(self):
-        if self.balance >= 0 and self.overdrafts <= 2:
-            self.deactivated = False
-            self.overdrafts = 0
-            print(f"The action has been reactivated for account {self.account_number}.")
-        else:
-            print(f"Account {self.account_number} cannot be reactivated due to negative balance or excessive overdrafts.")
-
 class Customer:
     def __init__(self, account_id, first_name, last_name, password, balance_checking=0, balance_savings=0, accounts=None):
         self.account_id = account_id
@@ -283,8 +302,3 @@ def user_interaction():
 
 if __name__ == "__main__":
     user_interaction()
-
-
-
-
-
