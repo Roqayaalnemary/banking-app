@@ -13,7 +13,7 @@ class Date:
 
     def write_transactions(self, transactions):
         with open(self.bank_csv, mode='w', newline='') as file:
-            fieldnames = ['account_number', 'transaction_type', 'amount', 'balance', 'date']
+            fieldnames = ['account_number', 'transaction_type', 'amount', 'balance']
             writer = csv.DictWriter(file, fieldnames=fieldnames)
             writer.writeheader()
             for transaction in transactions:
@@ -51,24 +51,18 @@ class Account:
         potential_balance = self.balance - amount
         if potential_balance < -100:
             print("Withdrawal denied! Account cannot go below -$100.")
-            print(self.balance)
             return
 
         self.balance -= amount
         print(f"Withdrew ${amount} from account {self.account_number}")
 
         if self.balance < 0:
-         if self.balance - 35 < -100:
-            self.deactivated = True
-            print(f"Account {self.account_number} has been deactivated due to excessive overdrafts.")
-            return
-            self.balance -= 35
+            self.balance -= 35  
             print("Overdraft fee of $35 applied.")
-
-        if self.balance < -100:
-            self.deactivated = True
-            print(f"Account {self.account_number} has been deactivated due to excessive overdrafts.")
-            print(self.balance)
+            if self.balance < -100:
+                self.deactivated = True
+                print(f"Account {self.account_number} has been deactivated due to excessive overdrafts.")
+                return
 
     def transfer(self, target_account, amount):
         if self.balance >= amount:
@@ -85,20 +79,7 @@ class Account:
             print(f"The account has been reactivated for account {self.account_number}.")
         else:
             print(f"Account {self.account_number} cannot be reactivated due to negative balance or excessive overdrafts.")
-       
-            print("Withdrawal amount must be positive.")
 
-    def transfer(self, target_account, amount):
-        if self.balance >= amount:
-            self.balance -= amount
-            target_account.balance += amount
-            print(f"Transferred ${amount} from account {self.account_number} to account {target_account.account_number}")
-        else:
-            print("Insufficient funds for transfer.")
-
-    def get_balance(self):
-        print(f"Account Number: {self.account_number}, Balance: ${self.balance}, Account Type: {self.account_type}")
-        
 class Customer:
     def __init__(self, account_id, first_name, last_name, password, balance_checking=0, balance_savings=0, accounts=None):
         self.account_id = account_id
@@ -110,8 +91,8 @@ class Customer:
             self.checking_account = Account(account_id + "_checking", balance_checking, 'Checking')
         if 'Savings' in self.accounts:
             self.savings_account = Account(account_id + "_savings", balance_savings, 'Savings')
+
     def get_account_info(self):
-        
         print(f"Account ID: {self.account_id}")
         print(f"Name: {self.first_name} {self.last_name}")
         if hasattr(self, 'checking_account'):
@@ -137,35 +118,35 @@ class Customer:
     def deposit_to_checking(self, amount):
         if hasattr(self, 'checking_account'):
             self.checking_account.deposit(amount)
-            self.update_csv() 
+            self.update_csv()
 
     def deposit_to_savings(self, amount):
         if hasattr(self, 'savings_account'):
             self.savings_account.deposit(amount)
-            self.update_csv()  
+            self.update_csv()
 
     def withdraw_from_checking(self, amount):
         if hasattr(self, 'checking_account'):
             self.checking_account.withdraw(amount)
-            self.update_csv() 
+            self.update_csv()
 
     def withdraw_from_savings(self, amount):
         if hasattr(self, 'savings_account'):
             self.savings_account.withdraw(amount)
-            self.update_csv()  
+            self.update_csv()
 
     def transfer_between_accounts(self, amount):
         if hasattr(self, 'checking_account') and hasattr(self, 'savings_account'):
             self.checking_account.balance -= amount
             self.savings_account.balance += amount
-            self.update_csv() 
+            self.update_csv()
             print(f"Transferred ${amount} from Checking to Savings.")
 
-    def transfer_to_other_customer(self, other_customer, amount):
+    def transfer_to_other_customer(self, other_customer, amount, from_account_type, to_account_type):
         if hasattr(self, 'checking_account') and self.checking_account.balance >= amount:
             self.checking_account.balance -= amount
             other_customer.checking_account.balance += amount
-            self.update_csv() 
+            self.update_csv()
             print(f"Transferred ${amount} from your account to {other_customer.first_name} {other_customer.last_name}.")
         else:
             print("Insufficient funds.")
@@ -271,7 +252,8 @@ def user_interaction():
                     print("3️ Transfer from Checking to Savings")
                     print("4️ Withdraw from Savings")
                     print("5️ View Account Info")
-                    print("6️ Logout")
+                    print("6️ Transfer to Another Customer")
+                    print("7️ Logout")
 
                     sub_choice = input("Enter choice: ")
 
@@ -290,6 +272,16 @@ def user_interaction():
                     elif sub_choice == '5':
                         logged_in_customer.get_account_info()
                     elif sub_choice == '6':
+                        other_account_id = input("Enter recipient's Account ID: ")
+                        other_customer = login_system.customers.get(other_account_id)
+                        if other_customer:
+                            amount = int(input("Enter transfer amount: "))
+                            from_account_type = input("Enter source account type (checking/savings): ").strip().lower()
+                            to_account_type = input("Enter destination account type (checking/savings): ").strip().lower()
+                            logged_in_customer.transfer_to_other_customer(other_customer, amount, from_account_type, to_account_type)
+                        else:
+                            print("Recipient not found.")
+                    elif sub_choice == '7':
                         print("Logged out successfully!")
                         break
 
@@ -302,3 +294,4 @@ def user_interaction():
 
 if __name__ == "__main__":
     user_interaction()
+
