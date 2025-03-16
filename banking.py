@@ -19,7 +19,6 @@ class Date:
             for transaction in transactions:
                 writer.writerow(transaction)
 
-
 class Account:
     def __init__(self, account_number, initial_balance=0, account_type='Checking'):
         self.account_number = account_number
@@ -31,7 +30,7 @@ class Account:
     def deposit(self, amount):
         if amount > 0:
             self.balance += amount
-            print(f"Deposited ${amount} into account {self.account_number}")
+            print(f"Deposited ${amount} into account {self.account_number}. New balance: ${self.balance}")
         else:
             print("Deposit amount must be positive.")
 
@@ -39,22 +38,21 @@ class Account:
         if amount > 100:
             print("You cannot withdraw more than $100 per transaction.")
             return
-
+    
         if amount <= 0:
             print("Withdrawal amount must be positive.")
             return
-
         if self.deactivated:
             print("Account is deactivated. Please reactivate the account before withdrawing.")
             return
-
         potential_balance = self.balance - amount
         if potential_balance < -100:
             print("Withdrawal denied! Account cannot go below -$100.")
+            print(self.balance)
             return
 
         self.balance -= amount
-        print(f"Withdrew ${amount} from account {self.account_number}")
+        print(f"Withdrew ${amount} from account {self.account_number}. New balance: ${self.balance}")
 
         if self.balance < 0:
             self.balance -= 35  
@@ -62,7 +60,20 @@ class Account:
             if self.balance < -100:
                 self.deactivated = True
                 print(f"Account {self.account_number} has been deactivated due to excessive overdrafts.")
-                return
+
+    def get_balance(self):
+        return self.balance
+
+    def reactivate_account(self):
+        if self.deactivated:
+            if self.balance >= 0 and self.overdrafts <= 2:
+                self.deactivated = False
+                self.overdrafts = 0
+                print(f"Account {self.account_number} has been reactivated.")
+            else:
+                print(f"Account {self.account_number} cannot be reactivated due to negative balance or excessive overdrafts.")
+        else:
+            print(f"Account {self.account_number} is already active.")
 
     def transfer(self, target_account, amount):
         if self.balance >= amount:
@@ -294,4 +305,3 @@ def user_interaction():
 
 if __name__ == "__main__":
     user_interaction()
-

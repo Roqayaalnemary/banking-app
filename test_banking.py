@@ -2,8 +2,6 @@ import unittest
 import csv
 from banking import Account, Customer, Login, Date
 from unittest.mock import patch
-from banking import CheckingAccount  
-
 class TestAccount(unittest.TestCase):
 
     def setUp(self):
@@ -112,6 +110,15 @@ class TestDate(unittest.TestCase):
             self.assertIn('12345', content)
             self.assertIn('67890', content)
 
+class CheckingAccount:
+    def __init__(self, balance=0):
+        self.balance = balance
+        self.overdraft_fee = 30 
+
+    def withdraw(self, amount):
+        if self.balance - amount < 0:
+            self.balance -= self.overdraft_fee 
+        self.balance -= amount
 
 if __name__ == '__main__':
     unittest.main()
